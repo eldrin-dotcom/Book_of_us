@@ -1,2 +1,3 @@
 import chapter from './chapter'
-export const schemaTypes = [chapter]
+import galleryImage from './galleryImage'
+export const schemaTypes = [chapter, galleryImage]

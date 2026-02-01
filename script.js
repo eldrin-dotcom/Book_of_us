@@ -3,13 +3,13 @@
         const SANITY_PROJECT_ID = "hdn2ismf"; // e.g., "zs92c92"
         const SANITY_DATASET = "production"; 
 
-         // --- State Management ---
+        // --- State Management ---
         let chapters = []; // Will be populated by Sanity
         let currentChapterIndex = 0;
 
         // --- Functions ---
         
-        // 1. Fetch from Sanity CMS
+        // 1. Fetch from Sanity CMS (Chapters)
         async function fetchChapters() {
             // Show loading indicators
             document.getElementById('loading-indicator').classList.remove('hidden');
@@ -56,6 +56,73 @@
                 finalizeDataLoad();
             }
         }
+        
+        // 2. Fetch from Sanity CMS (Gallery)
+        async function fetchGallery() {
+            const grid = document.getElementById('gallery-grid');
+            
+            if (!SANITY_PROJECT_ID) {
+                grid.innerHTML = '<div class="p-8 text-center text-gray-400">Please configure Sanity Project ID to load gallery.</div>';
+                return;
+            }
+
+            try {
+                // GROQ query: Get caption, date, and the image URL
+                // Note: "image.asset->url" is the magic that gets the actual link
+                const query = `*[_type == "galleryImage"] | order(date desc) {
+                    caption,
+                    date,
+                    "imageUrl": image.asset->url
+                }`;
+                
+                const encodedQuery = encodeURIComponent(query);
+                const url = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2021-10-21/data/query/${SANITY_DATASET}?query=${encodedQuery}`;
+
+                const response = await fetch(url);
+                const resultWrapper = await response.json();
+
+                if (resultWrapper.result && resultWrapper.result.length > 0) {
+                    renderGallery(resultWrapper.result);
+                } else {
+                    grid.innerHTML = '<div class="p-8 text-center text-gray-400">No photos found in archive.</div>';
+                }
+
+            } catch (error) {
+                console.error("Failed to fetch gallery:", error);
+                grid.innerHTML = '<div class="p-8 text-center text-gray-400">Failed to load archive.</div>';
+            }
+        }
+
+        function renderGallery(images) {
+            const grid = document.getElementById('gallery-grid');
+            grid.innerHTML = ''; // Clear loading state
+
+            images.forEach(img => {
+                // Create Card HTML
+                const card = document.createElement('div');
+                card.className = 'break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200';
+                
+                // Determine layout class based on image aspect ratio? 
+                // For now, we use standard masonry styles.
+                
+                card.innerHTML = `
+                    <div class="bg-gray-200 w-full overflow-hidden mb-3 relative group rounded-md">
+                        <img src="${img.imageUrl}" alt="${img.caption || 'Memory'}" class="w-full h-auto object-cover transition-opacity duration-700 opacity-0" onload="this.classList.remove('opacity-0')">
+                        <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
+                    </div>
+                    ${img.caption ? `<p class="font-serif text-center text-sm italic text-gray-600">"${img.caption}"</p>` : ''}
+                    ${img.date ? `<p class="text-center text-xs text-gray-400 mt-1">${formatDate(img.date)}</p>` : ''}
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        function formatDate(dateString) {
+            if(!dateString) return '';
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
 
         function finalizeDataLoad() {
             // Hide loaders
@@ -67,7 +134,7 @@
             loadChapter(0);
         }
 
-        // 2. Helper: Converts plain text to HTML with University Series styling
+        // 3. Helper: Converts plain text to HTML with University Series styling
         function parseStoryContent(text) {
             if (!text) return '';
             
@@ -114,7 +181,7 @@
             }).join('');
         }
 
-        // 3. Router Logic
+        // 4. Router Logic
         function router(viewName) {
             // Hide all views
             document.querySelectorAll('.view-section').forEach(el => {
@@ -141,7 +208,7 @@
             });
         }
 
-        // 4. Mobile Menu Toggle
+        // 5. Mobile Menu Toggle
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
             const icon = document.getElementById('menu-icon');
@@ -157,7 +224,7 @@
             }
         }
 
-        // 5. Mobile Chapter List Toggle
+        // 6. Mobile Chapter List Toggle
         function toggleChapterList() {
             const list = document.getElementById('chapter-list-container');
             const icon = document.getElementById('chapter-toggle-icon');
@@ -171,7 +238,7 @@
             }
         }
 
-        // 6. Render Chapter List (Sidebar/Accordion)
+        // 7. Render Chapter List (Sidebar/Accordion)
         function renderChapterList() {
             const listContainer = document.getElementById('chapter-list-container');
             listContainer.innerHTML = '';
@@ -208,7 +275,7 @@
             });
         }
 
-        // 7. Load Specific Chapter
+        // 8. Load Specific Chapter
         function loadChapter(index) {
             const display = document.getElementById('chapter-display');
 
@@ -273,7 +340,7 @@
             }, 200);
         }
 
-        // 8. Pagination Logic
+        // 9. Pagination Logic
         function changeChapter(direction) {
             const newIndex = currentChapterIndex + direction;
             if (newIndex >= 0 && newIndex < chapters.length) {
@@ -303,5 +370,6 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             fetchChapters();
+            fetchGallery(); // NEW: Fetch the images too
             router('home'); // Start at home
         });

@@ -242,55 +242,14 @@
                 <p class="text-gray-500 mt-2 text-sm md:text-base">Captured moments from our semesters together.</p>
             </div>
 
-            <!-- Masonry Grid -->
-            <div class="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-                <!-- Gallery Item 1 -->
-                <div class="break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200">
-                    <div class="bg-gray-200 aspect-[4/5] w-full overflow-hidden mb-3 relative group rounded-md">
-                        <div class="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
-                            <i class="ph ph-image text-4xl"></i>
-                        </div>
-                        <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1000&auto=format&fit=crop" alt="Memory" class="object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700" onload="this.classList.remove('opacity-0')">
-                    </div>
-                    <p class="font-serif text-center text-sm italic text-gray-600">"First Coffee Date"</p>
-                    <p class="text-center text-xs text-gray-400 mt-1">Oct 12, 2023</p>
-                </div>
-
-                <!-- Gallery Item 2 -->
-                <div class="break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200">
-                    <div class="bg-gray-200 aspect-video w-full overflow-hidden mb-3 relative group rounded-md">
-                         <div class="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
-                            <i class="ph ph-image text-4xl"></i>
-                        </div>
-                        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop" alt="Memory" class="object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700" onload="this.classList.remove('opacity-0')">
-                    </div>
-                    <p class="font-serif text-center text-sm italic text-gray-600">"Study Session"</p>
-                    <p class="text-center text-xs text-gray-400 mt-1">Nov 05, 2023</p>
-                </div>
-
-                 <!-- Gallery Item 3 -->
-                <div class="break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200">
-                    <div class="bg-gray-200 aspect-square w-full overflow-hidden mb-3 relative group rounded-md">
-                         <div class="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
-                            <i class="ph ph-image text-4xl"></i>
-                        </div>
-                        <img src="https://images.unsplash.com/photo-1516961642265-531546e84af2?q=80&w=1000&auto=format&fit=crop" alt="Memory" class="object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700" onload="this.classList.remove('opacity-0')">
-                    </div>
-                    <p class="font-serif text-center text-sm italic text-gray-600">"Museum Trip"</p>
-                    <p class="text-center text-xs text-gray-400 mt-1">Dec 15, 2023</p>
-                </div>
-                
-                 <!-- Gallery Item 4 -->
-                <div class="break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200">
-                    <div class="bg-gray-200 aspect-[3/4] w-full overflow-hidden mb-3 relative group rounded-md">
-                         <div class="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
-                            <i class="ph ph-image text-4xl"></i>
-                        </div>
-                        <img src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=1000&auto=format&fit=crop" alt="Memory" class="object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700" onload="this.classList.remove('opacity-0')">
-                    </div>
-                    <p class="font-serif text-center text-sm italic text-gray-600">"Campus Walk"</p>
-                    <p class="text-center text-xs text-gray-400 mt-1">Feb 14, 2024</p>
-                </div>
+            <!-- Dynamic Masonry Grid -->
+            <!-- Hardcoded items removed. Grid will be populated by JS -->
+            <div id="gallery-grid" class="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                 <!-- Loading State -->
+                 <div class="break-inside-avoid text-center p-8 text-gray-400">
+                     <div class="loader mx-auto mb-2"></div>
+                     <p>Loading archives...</p>
+                 </div>
             </div>
         </section>
 
@@ -369,7 +328,7 @@
             <p class="font-serif text-gray-500 text-sm">© 2024 The University Series. All rights reserved.</p>
         </div>
     </footer>
-
+    
     <!-- JavaScript Logic -->
     <script src="script.js"></script>
 </body>
