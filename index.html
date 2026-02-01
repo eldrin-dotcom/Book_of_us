@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The University Series: Our Story</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Playfair Display (Serif) & Inter (Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        'varsity-orange': '#c2410c', // Deep Burnt Orange
+                        'varsity-gold': '#d97706', // Muted Gold (Kept as accent)
+                        'paper': '#fffaf0', // Floral White (Warmer background)
+                        'ink': '#431407', // Dark warm brown (instead of cold black)
+                    },
+                    screens: {
+                        'xs': '475px',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom scrollbar for that premium feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fffaf0; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fdba74; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ea580c; 
+        }
+        
+        /* Hide scrollbar for chapter list but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile Tap Highlight Removal */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-paper text-ink font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-paper/95 backdrop-blur-sm border-b border-orange-100 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Brand -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer active:opacity-70 transition-opacity" onclick="router('home')">
+                    <i class="ph ph-book-open-text text-2xl text-varsity-orange mr-2"></i>
+                    <span class="font-serif font-bold text-xl tracking-tight text-varsity-orange">The Archive</span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8">
+                    <button onclick="router('home')" class="nav-item text-gray-500 hover:text-varsity-orange transition-colors font-medium">Home</button>
+                    <button onclick="router('chapters')" class="nav-item text-gray-500 hover:text-varsity-orange transition-colors font-medium">Chapters</button>
+                    <button onclick="router('gallery')" class="nav-item text-gray-500 hover:text-varsity-orange transition-colors font-medium">Gallery</button>
+                    <button onclick="router('students')" class="nav-item text-gray-500 hover:text-varsity-orange transition-colors font-medium">Students</button>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button onclick="toggleMobileMenu()" class="p-2 -mr-2 text-gray-500 hover:text-varsity-orange focus:outline-none active:bg-orange-50 rounded-full transition-colors">
+                        <i id="menu-icon" class="ph ph-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Panel (Full width dropdown) -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-orange-100 bg-paper absolute w-full shadow-lg origin-top animate-fade-in-down">
+            <div class="px-4 pt-4 pb-6 space-y-2">
+                <button onclick="router('home'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-lg text-lg font-medium text-gray-700 hover:bg-orange-50 active:bg-orange-100 flex items-center">
+                    <i class="ph ph-house mr-3 text-xl text-varsity-orange"></i> Home
+                </button>
+                <button onclick="router('chapters'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-lg text-lg font-medium text-gray-700 hover:bg-orange-50 active:bg-orange-100 flex items-center">
+                    <i class="ph ph-book-bookmark mr-3 text-xl text-varsity-orange"></i> Chapters
+                </button>
+                <button onclick="router('gallery'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-lg text-lg font-medium text-gray-700 hover:bg-orange-50 active:bg-orange-100 flex items-center">
+                    <i class="ph ph-image mr-3 text-xl text-varsity-orange"></i> Gallery
+                </button>
+                <button onclick="router('students'); toggleMobileMenu()" class="w-full text-left px-4 py-3 rounded-lg text-lg font-medium text-gray-700 hover:bg-orange-50 active:bg-orange-100 flex items-center">
+                    <i class="ph ph-student mr-3 text-xl text-varsity-orange"></i> Students
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
+        
+        <!-- HOME SECTION -->
+        <section id="home-view" class="view-section fade-in">
+            <div class="text-center py-10 md:py-24">
+                <span class="inline-block py-1 px-3 rounded-full bg-orange-50 text-varsity-orange text-xs font-semibold tracking-wider uppercase mb-4 border border-orange-100">
+                    Est. 2023
+                </span>
+                <!-- Adjusted size for mobile -->
+                <h1 class="text-4xl xs:text-5xl md:text-7xl font-serif font-bold text-varsity-orange mb-6 leading-tight">
+                    The Theory of Us
+                </h1>
+                <p class="mt-2 md:mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-600 font-serif italic px-2">
+                    "Every great love story is just a series of beautiful chapters waiting to be written."
+                </p>
+                
+                <!-- Buttons Stack on Mobile -->
+                <div class="mt-10 md:mt-12 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-2 sm:px-0">
+                    <button onclick="router('chapters')" class="w-full sm:w-auto px-8 py-3.5 bg-varsity-orange text-white rounded-lg shadow-md hover:bg-orange-800 active:transform active:scale-95 transition-all font-medium text-lg">
+                        Start Reading
+                    </button>
+                    <button onclick="router('gallery')" class="w-full sm:w-auto px-8 py-3.5 bg-white border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 active:transform active:scale-95 transition-all font-medium text-lg">
+                        View Archives
+                    </button>
+                </div>
+            </div>
+
+            <!-- Featured Quote Card -->
+            <div class="max-w-3xl mx-auto bg-white p-6 md:p-12 shadow-sm border border-orange-100 rounded-lg mt-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-varsity-orange"></div>
+                <i class="ph ph-quotes text-3xl md:text-4xl text-gray-200 absolute top-4 left-6"></i>
+                <h2 class="text-xl md:text-2xl font-serif text-center text-gray-800 mb-4 mt-2">Synopsis</h2>
+                <p class="text-gray-600 leading-relaxed text-center text-sm md:text-base">
+                    It started with a simple hello, confusing signals, and late-night study sessions that turned into conversations about everything and nothing. This isn't just a collection of dates; it's a study of how two people grew up, grew closer, and built a world of their own amidst the chaos of university life.
+                </p>
+                <div class="mt-6 flex justify-center items-center gap-2 text-xs md:text-sm text-gray-400">
+                    <i class="ph ph-heart-fill text-orange-400"></i>
+                    <span>Written by Us</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHAPTERS SECTION -->
+        <section id="chapters-view" class="view-section hidden fade-in">
+            <div class="lg:grid lg:grid-cols-12 gap-8 min-h-[600px]">
+                
+                <!-- Mobile: Collapsible Table of Contents / Desktop: Sidebar -->
+                <div class="lg:col-span-3 lg:border-r border-gray-200 pr-0 lg:pr-6 mb-6 lg:mb-0">
+                    
+                    <!-- Desktop Header -->
+                    <h3 class="hidden lg:flex font-serif text-xl font-bold text-varsity-orange mb-4 items-center">
+                        <i class="ph ph-list-dashes mr-2"></i> Table of Contents
+                    </h3>
+
+                    <!-- Mobile Accordion Toggle -->
+                    <button onclick="toggleChapterList()" class="lg:hidden w-full bg-white border border-orange-200 p-4 rounded-lg flex justify-between items-center shadow-sm mb-2 active:bg-orange-50">
+                         <span class="font-serif font-bold text-varsity-orange flex items-center">
+                            <i class="ph ph-list-dashes mr-2"></i> Jump to Chapter
+                        </span>
+                        <i id="chapter-toggle-icon" class="ph ph-caret-down text-gray-400 transition-transform"></i>
+                    </button>
+
+                    <!-- The List -->
+                    <div id="chapter-list-container" class="hidden lg:block space-y-2 lg:space-y-2 bg-white lg:bg-transparent p-2 lg:p-0 rounded-lg lg:rounded-none border border-orange-100 lg:border-none shadow-sm lg:shadow-none mb-4 lg:mb-0">
+                        <!-- Navigation items generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Chapter Content -->
+                <div class="lg:col-span-9 pl-0 lg:pl-4">
+                    <div id="chapter-display" class="bg-white p-6 md:p-12 shadow-sm border border-orange-100 rounded-lg min-h-[500px]">
+                        <!-- Content injected by JS -->
+                    </div>
+                    
+                    <!-- Chapter Controls -->
+                    <div class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 pb-12 md:pb-0">
+                        <button id="prev-btn" onclick="changeChapter(-1)" class="flex items-center text-gray-500 hover:text-varsity-orange disabled:opacity-30 disabled:cursor-not-allowed px-3 py-2 rounded active:bg-gray-100">
+                            <i class="ph ph-arrow-left mr-2"></i> Prev
+                        </button>
+                        <span id="chapter-pagination" class="font-serif text-gray-400 italic text-xs md:text-sm">Page 1</span>
+                        <button id="next-btn" onclick="changeChapter(1)" class="flex items-center text-gray-500 hover:text-varsity-orange disabled:opacity-30 disabled:cursor-not-allowed px-3 py-2 rounded active:bg-gray-100">
+                            Next <i class="ph ph-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GALLERY SECTION -->
+        <section id="gallery-view" class="view-section hidden fade-in">
+            <div class="text-center mb-8 md:mb-12">
+                <h2 class="text-3xl font-serif font-bold text-varsity-orange">The Archives</h2>
+                <p class="text-gray-500 mt-2 text-sm md:text-base">Captured moments from our semesters together.</p>
+            </div>
+
+            <!-- Masonry Grid -->
+            <div class="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                <!-- Gallery Item 1 -->
+                <div class="break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200">
+                    <div class="bg-gray-200 aspect-[4/5] w-full overflow-hidden mb-3 relative group rounded-md">
+                        <div class="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
+                            <i class="ph ph-image text-4xl"></i>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1000&auto=format&fit=crop" alt="Memory" class="object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700" onload="this.classList.remove('opacity-0')">
+                    </div>
+                    <p class="font-serif text-center text-sm italic text-gray-600">"First Coffee Date"</p>
+                    <p class="text-center text-xs text-gray-400 mt-1">Oct 12, 2023</p>
+                </div>
+
+                <!-- Gallery Item 2 -->
+                <div class="break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200">
+                    <div class="bg-gray-200 aspect-video w-full overflow-hidden mb-3 relative group rounded-md">
+                         <div class="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
+                            <i class="ph ph-image text-4xl"></i>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop" alt="Memory" class="object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700" onload="this.classList.remove('opacity-0')">
+                    </div>
+                    <p class="font-serif text-center text-sm italic text-gray-600">"Study Session"</p>
+                    <p class="text-center text-xs text-gray-400 mt-1">Nov 05, 2023</p>
+                </div>
+
+                 <!-- Gallery Item 3 -->
+                <div class="break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200">
+                    <div class="bg-gray-200 aspect-square w-full overflow-hidden mb-3 relative group rounded-md">
+                         <div class="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
+                            <i class="ph ph-image text-4xl"></i>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1516961642265-531546e84af2?q=80&w=1000&auto=format&fit=crop" alt="Memory" class="object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700" onload="this.classList.remove('opacity-0')">
+                    </div>
+                    <p class="font-serif text-center text-sm italic text-gray-600">"Museum Trip"</p>
+                    <p class="text-center text-xs text-gray-400 mt-1">Dec 15, 2023</p>
+                </div>
+                
+                 <!-- Gallery Item 4 -->
+                <div class="break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200">
+                    <div class="bg-gray-200 aspect-[3/4] w-full overflow-hidden mb-3 relative group rounded-md">
+                         <div class="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-100">
+                            <i class="ph ph-image text-4xl"></i>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=1000&auto=format&fit=crop" alt="Memory" class="object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700" onload="this.classList.remove('opacity-0')">
+                    </div>
+                    <p class="font-serif text-center text-sm italic text-gray-600">"Campus Walk"</p>
+                    <p class="text-center text-xs text-gray-400 mt-1">Feb 14, 2024</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- STUDENTS SECTION -->
+        <section id="students-view" class="view-section hidden fade-in">
+            <div class="text-center mb-8 md:mb-12">
+                <h2 class="text-3xl font-serif font-bold text-varsity-orange">Student Records</h2>
+                <p class="text-gray-500 mt-2 text-sm md:text-base">The main characters.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <!-- Card 1 -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative">
+                    <div class="h-24 bg-varsity-orange w-full absolute top-0"></div>
+                    <div class="pt-12 px-6 pb-8 text-center relative z-10">
+                        <div class="w-24 h-24 mx-auto bg-gray-200 rounded-full border-4 border-white shadow-md mb-4 overflow-hidden">
+                             <!-- Placeholder Avatar -->
+                             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Him" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="text-xl font-bold font-serif text-gray-900">Your Name</h3>
+                        <p class="text-varsity-orange text-sm font-medium tracking-wide uppercase mb-6">Boyfriend / Author</p>
+                        
+                        <div class="text-left space-y-3 text-sm text-gray-600 bg-gray-50 p-4 rounded border border-gray-100">
+                            <div class="flex justify-between border-b border-gray-200 pb-2">
+                                <span class="font-semibold text-gray-400">ID No.</span>
+                                <span>2023-01-XYZ</span>
+                            </div>
+                            <div class="flex justify-between border-b border-gray-200 pb-2">
+                                <span class="font-semibold text-gray-400">Major</span>
+                                <span>Planned Dates</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-semibold text-gray-400">Status</span>
+                                <span class="text-green-600 font-medium">Taken</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative">
+                    <div class="h-24 bg-varsity-gold w-full absolute top-0"></div>
+                    <div class="pt-12 px-6 pb-8 text-center relative z-10">
+                         <div class="w-24 h-24 mx-auto bg-gray-200 rounded-full border-4 border-white shadow-md mb-4 overflow-hidden">
+                             <!-- Placeholder Avatar -->
+                             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Annie" alt="Her" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="text-xl font-bold font-serif text-gray-900">Her Name</h3>
+                        <p class="text-yellow-700 text-sm font-medium tracking-wide uppercase mb-6">Girlfriend / Muse</p>
+                        
+                        <div class="text-left space-y-3 text-sm text-gray-600 bg-gray-50 p-4 rounded border border-gray-100">
+                            <div class="flex justify-between border-b border-gray-200 pb-2">
+                                <span class="font-semibold text-gray-400">ID No.</span>
+                                <span>2023-01-ABC</span>
+                            </div>
+                            <div class="flex justify-between border-b border-gray-200 pb-2">
+                                <span class="font-semibold text-gray-400">Major</span>
+                                <span>Sweetness</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-semibold text-gray-400">Status</span>
+                                <span class="text-green-600 font-medium">Taken</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 py-8 flex flex-col items-center">
+            <i class="ph ph-heart text-varsity-orange text-2xl mb-2"></i>
+            <p class="font-serif text-gray-500 text-sm">© 2024 The University Series. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script src="script.js"></script>
+</body>
+</html>
