@@ -32,6 +32,16 @@
                     },
                     screens: {
                         'xs': '475px',
+                    },
+                    animation: {
+                        'pop': 'pop 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        pop: {
+                            '0%': { transform: 'scale(0)' },
+                            '80%': { transform: 'scale(1.2)' },
+                            '100%': { transform: 'scale(1)' },
+                        }
                     }
                 }
             }
@@ -95,6 +105,59 @@
     </style>
 </head>
 <body class="bg-paper text-ink font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- ANNIVERSARY MODAL -->
+    <div id="welcome-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden px-4">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden text-center border-4 border-double border-orange-100 animate-[fadeIn_0.5s_ease-out]">
+            
+            <!-- Step 1: Greeting -->
+            <div id="modal-step-1" class="modal-step">
+                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">❤️</span>
+                </div>
+                <h2 class="text-2xl font-serif font-bold text-varsity-orange mb-4">Happy Anniversary!</h2>
+                <p class="text-gray-600 mb-8 leading-relaxed font-serif text-lg">
+                    Hi love! Happy second Anniversary my lovelove, my wifey, my princess. First of all, here’s a bouquet of flowers for you.
+                </p>
+                <button onclick="nextModalStep(2)" class="w-full py-3 bg-varsity-orange text-white rounded-lg font-medium hover:bg-orange-800 transition-colors flex items-center justify-center gap-2">
+                    Next <i class="ph ph-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Step 2: Interactive Flowers -->
+            <div id="modal-step-2" class="modal-step hidden">
+                <h2 class="text-xl font-serif font-bold text-varsity-orange mb-2">For You 💐</h2>
+                <p class="text-xs text-gray-400 mb-4 uppercase tracking-wider">Tap the box to give more flowers!</p>
+                
+                <!-- Interactive Container -->
+                <div id="flower-container" class="h-64 relative bg-orange-50/50 border-2 border-dashed border-orange-200 rounded-xl mb-6 cursor-pointer overflow-hidden select-none touch-manipulation active:bg-orange-100/50 transition-colors" onclick="multiplyFlowers(event)">
+                     <!-- Initial Flower -->
+                     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl drop-shadow-sm filter">💐</div>
+                     <div class="absolute bottom-2 w-full text-center text-orange-300 text-[10px] pointer-events-none">Click/Tap me!</div>
+                </div>
+                
+                <button onclick="nextModalStep(3)" class="w-full py-3 bg-varsity-orange text-white rounded-lg font-medium hover:bg-orange-800 transition-colors flex items-center justify-center gap-2">
+                    Next <i class="ph ph-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Step 3: The Letter -->
+            <div id="modal-step-3" class="modal-step hidden">
+                <h2 class="text-xl font-serif font-bold text-varsity-orange mb-4">From Me to You</h2>
+                <div class="prose prose-sm text-left max-h-[50vh] overflow-y-auto mb-6 pr-2 -mr-2 text-gray-600 leading-relaxed font-serif bg-orange-50/30 p-4 rounded-lg border border-orange-100">
+                    <p class="mb-4">Don’t worry, i have a real bouquet of flowers ready for you, baka akalain mo eto na yun eh HAHAHAH.</p>
+                    <p class="mb-4">Happy second anniversary my love, this website is one of my gifts kasi i know that you really want the university series diba, but i cant still afford to buy you that book, so naisip ko, why not gawa na lang ako ng wattpadd story gamit story naten?</p>
+                    <p class="mb-4">Galing ko dun aminin mo. I know di ako yung boyfriend with grand gestures but i want you to know how much i love and care for you my princess.</p>
+                    <p class="mb-4">Di mo napansin na ginagawa ko to noh? (sabihin mo hindi mo napansin pls hehe). Sinisingit ko to gawin tuwing akala mo nagbabasa lang ako ng manhwa, nagbabasa naman talaga ako pero sinasideline ko to.</p>
+                    <p class="mb-4">Ayun, explore the website on your own na lang, dont think its cringe pls, i know not exactly right yung stories per se, i got the help of AI to romanticize it a little bit, pero ako nagsulat nung stories talaga ha.</p>
+                    <p class="font-bold text-varsity-orange">I love you my lovelove, mwaaa</p>
+                </div>
+                <button onclick="closeModal()" class="w-full py-3 bg-white border-2 border-varsity-orange text-varsity-orange rounded-lg font-bold hover:bg-orange-50 transition-colors">
+                    See Website
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Navigation -->
     <nav class="sticky top-0 z-50 bg-paper/95 backdrop-blur-sm border-b border-orange-100 transition-all duration-300">

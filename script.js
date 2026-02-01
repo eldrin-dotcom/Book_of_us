@@ -8,6 +8,59 @@
         let currentChapterIndex = 0;
 
         // --- Functions ---
+
+         // 0. Modal Logic
+        function showWelcomeModal() {
+            document.getElementById('welcome-modal').classList.remove('hidden');
+        }
+
+        function nextModalStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.modal-step').forEach(el => el.classList.add('hidden'));
+            // Show requested step
+            const stepEl = document.getElementById(`modal-step-${step}`);
+            if(stepEl) {
+                stepEl.classList.remove('hidden');
+                // Small bounce animation for the new step
+                stepEl.classList.add('animate-pop');
+                setTimeout(() => stepEl.classList.remove('animate-pop'), 300);
+            }
+        }
+
+        function multiplyFlowers(event) {
+            const container = document.getElementById('flower-container');
+            const flowers = ['🌹', '🌷', '🌸', '🌻', '🌺', '💐', '🌼'];
+            const randomFlower = flowers[Math.floor(Math.random() * flowers.length)];
+            
+            const el = document.createElement('div');
+            el.innerText = randomFlower;
+            el.style.position = 'absolute';
+            el.style.fontSize = (Math.random() * 20 + 20) + 'px'; // Random size 20-40px
+            
+            // Random position within the container
+            // Subtracting typical emoji width/height to keep inside
+            const rect = container.getBoundingClientRect();
+            const x = Math.random() * (rect.width - 40);
+            const y = Math.random() * (rect.height - 40);
+            
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.style.pointerEvents = 'none'; // So clicks pass through to container
+            el.className = 'animate-pop select-none'; 
+            
+            container.appendChild(el);
+        }
+
+        function closeModal() {
+             const modal = document.getElementById('welcome-modal');
+             // Add fade out effect
+             modal.style.opacity = '0';
+             modal.style.transition = 'opacity 0.3s ease';
+             setTimeout(() => {
+                 modal.classList.add('hidden');
+                 modal.style.opacity = '1'; // Reset for next reload
+             }, 300);
+        }
         
         // 1. Fetch from Sanity CMS (Chapters)
         async function fetchChapters() {
