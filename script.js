@@ -391,4 +391,5 @@
             fetchChapters();
             fetchGallery();
             router('home');
+            showWelcomeModal(); // MODAL START ON LOAD
         });
