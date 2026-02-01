@@ -4,9 +4,10 @@
         const SANITY_DATASET = "production"; 
 
          // --- State Management ---
-        let chapters = []; // Will be populated by backup or Sanity
+        let chapters = []; // Will be populated by Sanity
         let currentChapterIndex = 0;
-         // --- Functions ---
+
+        // --- Functions ---
         
         // 1. Fetch from Sanity CMS
         async function fetchChapters() {
@@ -14,18 +15,16 @@
             document.getElementById('loading-indicator').classList.remove('hidden');
             document.getElementById('mobile-loading-indicator').classList.remove('hidden');
 
-            // If no ID is provided, use backup
+            // If no ID is provided, notify user
             if (!SANITY_PROJECT_ID) {
-                console.log("No Sanity Project ID provided. Using backup data.");
-                chapters = backupChapters;
+                console.warn("No Sanity Project ID provided.");
+                chapters = [];
                 finalizeDataLoad();
                 return;
             }
 
             try {
                 // 1. Construct the GROQ Query
-                // We want all documents of type "chapter", ordered by ID or creation date
-                // We request specific fields: id, title, subtitle, content
                 const query = `*[_type == "chapter"] | order(id asc) {
                     id,
                     title,
@@ -42,18 +41,17 @@
                 const resultWrapper = await response.json();
                 
                 // Sanity returns data in { result: [...] }
-                if (resultWrapper.result && resultWrapper.result.length > 0) {
+                if (resultWrapper.result && Array.isArray(resultWrapper.result) && resultWrapper.result.length > 0) {
                     chapters = resultWrapper.result;
                     console.log("Loaded from Sanity!", chapters);
                 } else {
-                    console.warn("Sanity returned no chapters. Using backup.");
-                    chapters = backupChapters;
+                    console.warn("Sanity returned no chapters or invalid data.");
+                    chapters = [];
                 }
 
             } catch (error) {
                 console.error("Failed to fetch from Sanity:", error);
-                // Fallback to backup on error
-                chapters = backupChapters;
+                chapters = [];
             } finally {
                 finalizeDataLoad();
             }
@@ -116,7 +114,7 @@
             }).join('');
         }
 
-        // 1. Router Logic
+        // 3. Router Logic
         function router(viewName) {
             // Hide all views
             document.querySelectorAll('.view-section').forEach(el => {
@@ -143,7 +141,7 @@
             });
         }
 
-        // 2. Mobile Menu Toggle
+        // 4. Mobile Menu Toggle
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
             const icon = document.getElementById('menu-icon');
@@ -159,7 +157,7 @@
             }
         }
 
-        // 3. Mobile Chapter List Toggle
+        // 5. Mobile Chapter List Toggle
         function toggleChapterList() {
             const list = document.getElementById('chapter-list-container');
             const icon = document.getElementById('chapter-toggle-icon');
@@ -173,10 +171,16 @@
             }
         }
 
-        // 4. Render Chapter List (Sidebar/Accordion)
+        // 6. Render Chapter List (Sidebar/Accordion)
         function renderChapterList() {
             const listContainer = document.getElementById('chapter-list-container');
             listContainer.innerHTML = '';
+
+            // Handle empty chapters
+            if (!chapters || chapters.length === 0) {
+                 listContainer.innerHTML = `<div class="p-4 text-sm text-gray-400 italic">No chapters loaded.</div>`;
+                 return;
+            }
 
             chapters.forEach((chap, index) => {
                 const btn = document.createElement('button');
@@ -204,14 +208,38 @@
             });
         }
 
-        // 5. Load Specific Chapter
+        // 7. Load Specific Chapter
         function loadChapter(index) {
+            const display = document.getElementById('chapter-display');
+
+            // Safety Check: Handle empty chapters (prevents "reading 'id' of undefined" error)
+            if (!chapters || chapters.length === 0) {
+                 display.innerHTML = `
+                    <div class="text-center py-10">
+                        <i class="ph ph-warning-circle text-4xl text-gray-300 mb-2"></i>
+                        <h3 class="text-xl font-serif text-gray-500">No chapters found</h3>
+                        <p class="text-sm text-gray-400 mt-2 max-w-md mx-auto">
+                            ${!SANITY_PROJECT_ID 
+                                ? 'The Sanity Project ID is missing. Please add it to the code.' 
+                                : 'There are no published chapters in your Sanity Content Studio yet, or CORS is blocking the request.'}
+                        </p>
+                    </div>`;
+                 return;
+            }
+
+            // Ensure index is within bounds
+            if (index < 0 || index >= chapters.length) {
+                index = 0;
+            }
+            
             currentChapterIndex = index;
             const chap = chapters[index];
-            const display = document.getElementById('chapter-display');
             
             // Fade effect
             display.style.opacity = '0';
+            
+            // Parse content (converts plain text to styled HTML)
+            const parsedContent = parseStoryContent(chap.content);
             
             setTimeout(() => {
                 display.innerHTML = `
@@ -221,7 +249,7 @@
                         <p class="text-base md:text-lg text-varsity-orange font-serif italic mt-1 md:mt-2">${chap.subtitle}</p>
                     </div>
                     <div class="prose prose-sm md:prose-lg text-gray-600 font-sans max-w-none">
-                        ${chap.content}
+                        ${parsedContent}
                     </div>
                 `;
                 display.style.opacity = '1';
@@ -245,7 +273,7 @@
             }, 200);
         }
 
-        // 6. Pagination Logic
+        // 8. Pagination Logic
         function changeChapter(direction) {
             const newIndex = currentChapterIndex + direction;
             if (newIndex >= 0 && newIndex < chapters.length) {
@@ -258,6 +286,14 @@
             const nextBtn = document.getElementById('next-btn');
             const pageInfo = document.getElementById('chapter-pagination');
 
+            // Safety check for empty chapters
+            if (!chapters || chapters.length === 0) {
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                pageInfo.innerText = "Page 0 of 0";
+                return;
+            }
+
             prevBtn.disabled = currentChapterIndex === 0;
             nextBtn.disabled = currentChapterIndex === chapters.length - 1;
             
@@ -266,7 +302,6 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            renderChapterList();
-            loadChapter(0);
+            fetchChapters();
             router('home'); // Start at home
         });
