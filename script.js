@@ -3,7 +3,7 @@
         const SANITY_PROJECT_ID = "hdn2ismf"; // e.g., "zs92c92"
         const SANITY_DATASET = "production"; 
 
-        // --- State Management ---
+         // --- State Management ---
         let chapters = []; // Will be populated by Sanity
         let currentChapterIndex = 0;
 
@@ -15,7 +15,6 @@
             document.getElementById('loading-indicator').classList.remove('hidden');
             document.getElementById('mobile-loading-indicator').classList.remove('hidden');
 
-            // If no ID is provided, notify user
             if (!SANITY_PROJECT_ID) {
                 console.warn("No Sanity Project ID provided.");
                 chapters = [];
@@ -24,7 +23,7 @@
             }
 
             try {
-                // 1. Construct the GROQ Query
+                // Query: Get chapters sorted by ID
                 const query = `*[_type == "chapter"] | order(id asc) {
                     id,
                     title,
@@ -32,20 +31,17 @@
                     content
                 }`;
                 
-                // 2. Build the URL for Sanity's Public HTTP API
                 const encodedQuery = encodeURIComponent(query);
                 const url = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2021-10-21/data/query/${SANITY_DATASET}?query=${encodedQuery}`;
 
-                // 3. Fetch
                 const response = await fetch(url);
                 const resultWrapper = await response.json();
                 
-                // Sanity returns data in { result: [...] }
                 if (resultWrapper.result && Array.isArray(resultWrapper.result) && resultWrapper.result.length > 0) {
                     chapters = resultWrapper.result;
                     console.log("Loaded from Sanity!", chapters);
                 } else {
-                    console.warn("Sanity returned no chapters or invalid data.");
+                    console.warn("Sanity returned no chapters.");
                     chapters = [];
                 }
 
@@ -57,7 +53,7 @@
             }
         }
         
-        // 2. Fetch from Sanity CMS (Gallery)
+        // 2. Fetch from Sanity CMS (Gallery - ALBUM MODE)
         async function fetchGallery() {
             const grid = document.getElementById('gallery-grid');
             
@@ -67,12 +63,11 @@
             }
 
             try {
-                // GROQ query: Get caption, date, and the image URL
-                // Note: "image.asset->url" is the magic that gets the actual link
-                const query = `*[_type == "galleryImage"] | order(date desc) {
-                    caption,
+                // NEW Query: Get Albums, but extract the photo URLs inside them
+                const query = `*[_type == "album"] | order(date desc) {
+                    title,
                     date,
-                    "imageUrl": image.asset->url
+                    "photos": photos[].asset->url
                 }`;
                 
                 const encodedQuery = encodeURIComponent(query);
@@ -82,9 +77,27 @@
                 const resultWrapper = await response.json();
 
                 if (resultWrapper.result && resultWrapper.result.length > 0) {
-                    renderGallery(resultWrapper.result);
+                    // FLATTEN THE ALBUMS:
+                    // We get [ {title: "Trip", photos: [url1, url2]}, {title: "Date", photos: [url3]} ]
+                    // We want [ {url: url1, title: "Trip"}, {url: url2, title: "Trip"}, ... ]
+                    
+                    let allPhotos = [];
+                    
+                    resultWrapper.result.forEach(album => {
+                        if (album.photos && Array.isArray(album.photos)) {
+                            album.photos.forEach(photoUrl => {
+                                allPhotos.push({
+                                    url: photoUrl,
+                                    title: album.title, // Use album title as caption
+                                    date: album.date
+                                });
+                            });
+                        }
+                    });
+
+                    renderGallery(allPhotos);
                 } else {
-                    grid.innerHTML = '<div class="p-8 text-center text-gray-400">No photos found in archive.</div>';
+                    grid.innerHTML = '<div class="p-8 text-center text-gray-400">No albums found in archive.</div>';
                 }
 
             } catch (error) {
@@ -97,20 +110,22 @@
             const grid = document.getElementById('gallery-grid');
             grid.innerHTML = ''; // Clear loading state
 
+            if (images.length === 0) {
+                grid.innerHTML = '<div class="p-8 text-center text-gray-400">No photos found inside albums.</div>';
+                return;
+            }
+
             images.forEach(img => {
                 // Create Card HTML
                 const card = document.createElement('div');
                 card.className = 'break-inside-avoid bg-white p-3 shadow-sm border border-gray-100 rounded-lg transform active:scale-[0.98] transition-transform duration-200';
                 
-                // Determine layout class based on image aspect ratio? 
-                // For now, we use standard masonry styles.
-                
                 card.innerHTML = `
                     <div class="bg-gray-200 w-full overflow-hidden mb-3 relative group rounded-md">
-                        <img src="${img.imageUrl}" alt="${img.caption || 'Memory'}" class="w-full h-auto object-cover transition-opacity duration-700 opacity-0" onload="this.classList.remove('opacity-0')">
+                        <img src="${img.url}" alt="${img.title || 'Memory'}" class="w-full h-auto object-cover transition-opacity duration-700 opacity-0" onload="this.classList.remove('opacity-0')">
                         <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
                     </div>
-                    ${img.caption ? `<p class="font-serif text-center text-sm italic text-gray-600">"${img.caption}"</p>` : ''}
+                    ${img.title ? `<p class="font-serif text-center text-sm italic text-gray-600">"${img.title}"</p>` : ''}
                     ${img.date ? `<p class="text-center text-xs text-gray-400 mt-1">${formatDate(img.date)}</p>` : ''}
                 `;
                 
@@ -137,44 +152,27 @@
         // 3. Helper: Converts plain text to HTML with University Series styling
         function parseStoryContent(text) {
             if (!text) return '';
-            
-            // 1. If it looks like HTML (starts with <), return it as-is to support legacy/custom HTML
             if (text.trim().startsWith('<')) return text;
-
-            // 2. Split by double newlines to find paragraphs
             const paragraphs = text.split(/\n\s*\n/);
-            
             return paragraphs.map((para, index) => {
                 let cleanPara = para.trim();
                 if (!cleanPara) return '';
-
-                // NEW: Handle inline formatting (**bold** and *italics*)
-                // Replace **text** with <strong>text</strong>
                 cleanPara = cleanPara.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
-                // Replace *text* with <em>text</em>
                 cleanPara = cleanPara.replace(/\*(.*?)\*/g, '<em class="text-varsity-orange font-medium">$1</em>');
-
-                // Special handling for "To Be Continued..." centering
                 if (cleanPara === 'To Be Continued...') {
                     return `<p class="text-center font-serif text-xl font-bold text-varsity-orange mt-8">${cleanPara}</p>`;
                 }
-
-                // Quote Block Logic (lines starting with >)
                 if (cleanPara.startsWith('>')) {
                     const quoteContent = cleanPara.replace(/^>\s*/, '');
                     return `<div class="my-6 md:my-8 border-l-4 border-varsity-orange pl-4 italic text-gray-500 font-serif bg-orange-50/50 py-2 pr-2 rounded-r">
                         ${quoteContent}
                     </div>`;
                 }
-
-                // First Paragraph Drop-Cap Styling
                 if (index === 0) {
                     return `<p class="mb-4 text-lg first-letter:text-5xl first-letter:font-serif first-letter:text-varsity-orange first-letter:mr-2 first-letter:float-left text-gray-700 leading-relaxed">
                         ${cleanPara}
                     </p>`;
                 }
-
-                // Standard Paragraph Styling
                 return `<p class="mb-4 text-gray-700 leading-relaxed">
                     ${cleanPara}
                 </p>`;
@@ -183,20 +181,12 @@
 
         // 4. Router Logic
         function router(viewName) {
-            // Hide all views
-            document.querySelectorAll('.view-section').forEach(el => {
-                el.classList.add('hidden');
-            });
-            
-            // Show selected view
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             const selectedView = document.getElementById(`${viewName}-view`);
             if (selectedView) {
                 selectedView.classList.remove('hidden');
-                // Scroll to top
                 window.scrollTo(0, 0);
             }
-
-            // Update Active Nav State
             document.querySelectorAll('.nav-item').forEach(btn => {
                 if(btn.innerText.toLowerCase().includes(viewName === 'students' ? 'students' : viewName)) {
                     btn.classList.add('text-varsity-orange');
@@ -212,7 +202,6 @@
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
             const icon = document.getElementById('menu-icon');
-            
             if (menu.classList.contains('hidden')) {
                 menu.classList.remove('hidden');
                 icon.classList.remove('ph-list');
@@ -228,7 +217,6 @@
         function toggleChapterList() {
             const list = document.getElementById('chapter-list-container');
             const icon = document.getElementById('chapter-toggle-icon');
-            
             if (list.classList.contains('hidden')) {
                 list.classList.remove('hidden');
                 icon.style.transform = 'rotate(180deg)';
@@ -238,39 +226,28 @@
             }
         }
 
-        // 7. Render Chapter List (Sidebar/Accordion)
+        // 7. Render Chapter List
         function renderChapterList() {
             const listContainer = document.getElementById('chapter-list-container');
             listContainer.innerHTML = '';
-
-            // Handle empty chapters
             if (!chapters || chapters.length === 0) {
                  listContainer.innerHTML = `<div class="p-4 text-sm text-gray-400 italic">No chapters loaded.</div>`;
                  return;
             }
-
             chapters.forEach((chap, index) => {
                 const btn = document.createElement('button');
                 const isActive = index === currentChapterIndex;
-                
-                // Desktop vs Mobile styling classes
                 btn.className = `w-full text-left px-4 py-3 rounded-md transition-all duration-200 flex flex-col group ${isActive 
                     ? 'bg-orange-50 border-varsity-orange text-varsity-orange lg:border-l-2 border-l-4' 
                     : 'bg-transparent lg:border-l-2 border-transparent text-gray-600 hover:bg-orange-50 hover:text-gray-900 border-l-0'}`;
-                
                 btn.onclick = () => {
                     loadChapter(index);
-                    // Close accordion on mobile after selection
-                    if (window.innerWidth < 1024) {
-                        toggleChapterList();
-                    }
+                    if (window.innerWidth < 1024) toggleChapterList();
                 };
-                
                 btn.innerHTML = `
                     <span class="font-serif font-bold text-sm ${isActive ? 'text-varsity-orange' : 'text-gray-700 group-hover:text-gray-900'}">${chap.title}</span>
                     <span class="text-xs ${isActive ? 'text-orange-400' : 'text-gray-400'} mt-1 truncate">${chap.subtitle}</span>
                 `;
-                
                 listContainer.appendChild(btn);
             });
         }
@@ -278,8 +255,6 @@
         // 8. Load Specific Chapter
         function loadChapter(index) {
             const display = document.getElementById('chapter-display');
-
-            // Safety Check: Handle empty chapters (prevents "reading 'id' of undefined" error)
             if (!chapters || chapters.length === 0) {
                  display.innerHTML = `
                     <div class="text-center py-10">
@@ -293,21 +268,11 @@
                     </div>`;
                  return;
             }
-
-            // Ensure index is within bounds
-            if (index < 0 || index >= chapters.length) {
-                index = 0;
-            }
-            
+            if (index < 0 || index >= chapters.length) index = 0;
             currentChapterIndex = index;
             const chap = chapters[index];
-            
-            // Fade effect
             display.style.opacity = '0';
-            
-            // Parse content (converts plain text to styled HTML)
             const parsedContent = parseStoryContent(chap.content);
-            
             setTimeout(() => {
                 display.innerHTML = `
                     <div class="border-b border-orange-100 pb-4 mb-4 md:pb-6 md:mb-6">
@@ -321,16 +286,11 @@
                 `;
                 display.style.opacity = '1';
                 display.style.transition = 'opacity 0.3s ease-in-out';
-                
-                renderChapterList(); // Re-render to update active state
+                renderChapterList();
                 updatePaginationButtons();
-                
-                // Scroll behavior
                 const headerOffset = 80;
                 const elementPosition = display.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                // Only scroll if the top of the content is out of view
                 if (window.innerWidth < 1024) {
                      window.scrollTo({
                         top: offsetPosition,
@@ -343,33 +303,27 @@
         // 9. Pagination Logic
         function changeChapter(direction) {
             const newIndex = currentChapterIndex + direction;
-            if (newIndex >= 0 && newIndex < chapters.length) {
-                loadChapter(newIndex);
-            }
+            if (newIndex >= 0 && newIndex < chapters.length) loadChapter(newIndex);
         }
 
         function updatePaginationButtons() {
             const prevBtn = document.getElementById('prev-btn');
             const nextBtn = document.getElementById('next-btn');
             const pageInfo = document.getElementById('chapter-pagination');
-
-            // Safety check for empty chapters
             if (!chapters || chapters.length === 0) {
                 prevBtn.disabled = true;
                 nextBtn.disabled = true;
                 pageInfo.innerText = "Page 0 of 0";
                 return;
             }
-
             prevBtn.disabled = currentChapterIndex === 0;
             nextBtn.disabled = currentChapterIndex === chapters.length - 1;
-            
             pageInfo.innerText = `Chapter ${currentChapterIndex + 1} of ${chapters.length}`;
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             fetchChapters();
-            fetchGallery(); // NEW: Fetch the images too
-            router('home'); // Start at home
+            fetchGallery();
+            router('home');
         });
