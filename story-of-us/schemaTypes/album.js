@@ -1,4 +1,3 @@
-// schemas/album.js
 export default {
   name: 'album',
   title: 'Photo Album',
@@ -13,16 +12,35 @@ export default {
     {
       name: 'date',
       title: 'Date',
-      type: 'date'
+      type: 'date',
+      options: {
+        dateFormat: 'YYYY-MM-DD',
+        calendarTodayLabel: 'Today'
+      }
     },
     {
       name: 'photos',
       title: 'Photos',
-      type: 'array', // <--- This allows multiple items!
+      type: 'array', // This is what allows multiple selections!
       of: [{ type: 'image' }],
       options: {
-        layout: 'grid' // Shows them as a nice grid in the dashboard
+        layout: 'grid'
       }
     }
-  ]
+  ],
+  preview: {
+    select: {
+      title: 'title',
+      date: 'date',
+      media: 'photos.0'
+    },
+    prepare(selection) {
+      const { title, date, media } = selection
+      return {
+        title: title,
+        subtitle: date,
+        media: media
+      }
+    }
+  }
 }

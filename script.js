@@ -53,7 +53,7 @@
             }
         }
         
-        // 2. Fetch from Sanity CMS (Gallery - ALBUM MODE)
+        // 2. Fetch from Sanity CMS (Gallery - Supports Albums & Single Photos)
         async function fetchGallery() {
             const grid = document.getElementById('gallery-grid');
             
@@ -63,10 +63,14 @@
             }
 
             try {
-                // NEW Query: Get Albums, but extract the photo URLs inside them
-                const query = `*[_type == "album"] | order(date desc) {
+                // Query: Fetch BOTH single 'galleryImage' and 'album' types
+                // We rename fields to be consistent: imageUrl for single, photos[] for albums
+                const query = `*[_type in ["galleryImage", "album"]] | order(date desc) {
+                    _type,
                     title,
+                    caption,
                     date,
+                    "imageUrl": image.asset->url,
                     "photos": photos[].asset->url
                 }`;
                 
@@ -77,27 +81,35 @@
                 const resultWrapper = await response.json();
 
                 if (resultWrapper.result && resultWrapper.result.length > 0) {
-                    // FLATTEN THE ALBUMS:
-                    // We get [ {title: "Trip", photos: [url1, url2]}, {title: "Date", photos: [url3]} ]
-                    // We want [ {url: url1, title: "Trip"}, {url: url2, title: "Trip"}, ... ]
-                    
                     let allPhotos = [];
                     
-                    resultWrapper.result.forEach(album => {
-                        if (album.photos && Array.isArray(album.photos)) {
-                            album.photos.forEach(photoUrl => {
+                    resultWrapper.result.forEach(item => {
+                        // Handle Album (Multiple Photos)
+                        if (item._type === 'album' && item.photos && Array.isArray(item.photos)) {
+                            item.photos.forEach(photoUrl => {
                                 allPhotos.push({
                                     url: photoUrl,
-                                    title: album.title, // Use album title as caption
-                                    date: album.date
+                                    title: item.title, 
+                                    date: item.date
                                 });
+                            });
+                        }
+                        // Handle Single Image
+                        else if (item._type === 'galleryImage' && item.imageUrl) {
+                            allPhotos.push({
+                                url: item.imageUrl,
+                                title: item.caption,
+                                date: item.date
                             });
                         }
                     });
 
+                    // Sort combined list by date again (client-side sort to mix them properly)
+                    allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+
                     renderGallery(allPhotos);
                 } else {
-                    grid.innerHTML = '<div class="p-8 text-center text-gray-400">No albums found in archive.</div>';
+                    grid.innerHTML = '<div class="p-8 text-center text-gray-400">No photos found in archive.</div>';
                 }
 
             } catch (error) {
